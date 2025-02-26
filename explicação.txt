@@ -233,3 +233,104 @@ Digite o nome do arquivo XLS/XLSX (ex: dados.xlsx):
 Agora, **digite o nome do arquivo** (ex: `meu_arquivo.xls`) e pressione **Enter**.  
 
 Se precisar de mais alguma coisa, só chamar! 🚀🔧
+
+=======================================================================================================
+
+Sim! É totalmente possível **adicionar mais informações a uma coleção existente no MongoDB** sem substituir os dados anteriores. O método correto para isso é **`insertMany()`**, que simplesmente insere novos documentos na coleção sem apagar os que já existem.  
+
+### 🔹 **Atualizando o Código para Inserir Dados em uma Coleção Existente**
+O código que criamos já funciona para adicionar novos dados sem apagar os antigos. Mas vamos reforçar isso deixando claro que **os dados serão adicionados** e não substituídos.
+
+---
+
+### **📌 Código Atualizado para Inserção de Novos Dados em uma Coleção Existente**
+```javascript
+const XLSX = require("xlsx");
+const { MongoClient } = require("mongodb");
+const readline = require("readline");
+
+// 📌 Criar interface para ler entrada do terminal
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+// 📌 Configuração do MongoDB
+const MONGO_URL = "mongodb://localhost:27017"; // Ajuste conforme necessário
+const DATABASE_NAME = "meu_banco_de_dados";
+
+// 📌 Perguntar ao usuário o nome do arquivo
+rl.question("Digite o nome do arquivo XLS/XLSX (ex: dados.xlsx): ", (filePath) => {
+    rl.question("Digite o nome da coleção no MongoDB onde os dados serão adicionados: ", async (collectionName) => {
+        try {
+            // 📌 Conectar ao MongoDB
+            const client = new MongoClient(MONGO_URL);
+            await client.connect();
+            console.log("✅ Conectado ao MongoDB!");
+
+            const db = client.db(DATABASE_NAME);
+            const collection = db.collection(collectionName);
+
+            // 📌 Ler o arquivo Excel
+            const workbook = XLSX.readFile(filePath);
+            const sheetName = workbook.SheetNames[0]; // Pega a primeira aba
+            const sheet = workbook.Sheets[sheetName];
+
+            // 📌 Converter os dados para JSON
+            const data = XLSX.utils.sheet_to_json(sheet);
+
+            // 📌 Inserir os novos dados na coleção existente
+            if (data.length > 0) {
+                await collection.insertMany(data);
+                console.log(`✅ ${data.length} novos documentos adicionados à coleção "${collectionName}"!`);
+            } else {
+                console.log("⚠️ Nenhum dado encontrado no arquivo.");
+            }
+
+            // 📌 Fechar a conexão com o banco
+            await client.close();
+            console.log("🔌 Conexão encerrada.");
+        } catch (error) {
+            console.error("❌ Erro ao importar dados:", error);
+        } finally {
+            rl.close(); // Fechar o readline
+        }
+    });
+});
+```
+
+---
+
+### 🔹 **O Que Esse Código Faz?**
+✅ **Conecta ao MongoDB** e escolhe uma coleção existente ou nova.  
+✅ **Lê os dados do arquivo XLS/XLSX** e converte para JSON.  
+✅ **Adiciona os novos documentos na coleção** SEM excluir os dados antigos.  
+✅ **Fecha a conexão com o banco de dados corretamente**.  
+
+---
+
+### **🔹 O Que Acontece Quando Executo Esse Script?**
+Se a coleção **já existir**, os novos dados **serão adicionados** sem apagar os antigos. Se a coleção **ainda não existir**, o MongoDB **criará automaticamente** a coleção e adicionará os documentos.  
+
+---
+
+### **🔹 Como Rodar o Script?**
+No terminal, execute:  
+```bash
+node importExcel.js
+```
+Agora, o script perguntará:  
+```
+Digite o nome do arquivo XLS/XLSX (ex: dados.xlsx):
+```
+➡️ Digite, por exemplo: **novos_clientes.xlsx** e pressione **Enter**.  
+
+Em seguida, perguntará:  
+```
+Digite o nome da coleção no MongoDB onde os dados serão adicionados:
+```
+➡️ Digite, por exemplo: **clientes** e pressione **Enter**.  
+
+**🎯 Agora, os dados do arquivo `novos_clientes.xlsx` serão adicionados à coleção `clientes`, sem apagar os dados anteriores!**  
+
+Se precisar de mais alguma coisa, só chamar! 🚀🔧🔥
